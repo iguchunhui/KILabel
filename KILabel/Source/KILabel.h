@@ -176,6 +176,16 @@ IB_DESIGNABLE
  */
 @property (nullable, nonatomic, copy) KILinkTapHandler urlLinkTapHandler;
 
+/**
+ * For URL just display this is a url link
+ */
+@property (nonatomic , assign) BOOL displayConvertLinkName;
+/**
+ * If set displayJustLinkName to true 
+ * the url will display with content urlDisplayContent
+ */
+@property (nullable , nonatomic , copy) NSString *urlDisplayContent;
+
 /** ****************************************************************************************** **
  * @name Geometry
  ** ****************************************************************************************** **/

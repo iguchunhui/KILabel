@@ -49,8 +49,13 @@
 {
     [super viewDidLoad];
     
+    _label.displayConvertLinkName = YES;
+    _label.urlDisplayContent = @"百度";
     _label.systemURLStyle = YES;
-
+    _label.tintColor =  [UIColor yellowColor];
+    _label.systemURLStyle = YES;
+    _label.text = @"这是测试一个url http://www.baidu.com哈哈  新浪 http://www.sina.com.cn 嘻嘻~";
+    
     // Attach block for handling taps on usenames
     _label.userHandleLinkTapHandler = ^(KILabel *label, NSString *string, NSRange range) {
         NSString *message = [NSString stringWithFormat:@"You tapped %@", string];
@@ -61,7 +66,7 @@
         
         [self presentViewController:alert animated:YES completion:nil];
     };
-
+    
     _label.hashtagLinkTapHandler = ^(KILabel *label, NSString *string, NSRange range) {
         NSString *message = [NSString stringWithFormat:@"You tapped %@", string];
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Hashtag"
@@ -74,6 +79,9 @@
     
     _label.urlLinkTapHandler = ^(KILabel *label, NSString *string, NSRange range) {
         // Open URLs
+        
+        NSLog(@"string is: %@ \n range is: %@",string,NSStringFromRange(range));
+        
         [self attemptOpenURL:[NSURL URLWithString:string]];
     };
 }
@@ -109,7 +117,7 @@
     // Put up an action sheet to let the user do something with the link
     UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
     [actionSheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-
+    
     [actionSheet addAction:[UIAlertAction actionWithTitle:@"Copy link" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         // Copy straight to the pasteboard
         [UIPasteboard generalPasteboard].string = link[KILabelLinkKey];
@@ -118,7 +126,7 @@
     [actionSheet addAction:[UIAlertAction actionWithTitle:@"Mail link" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         [self mailLink:link[KILabelLinkKey]];
     }]];
-
+    
     [actionSheet addAction:[UIAlertAction actionWithTitle:@"Open in Safari" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         NSURL *url = [NSURL URLWithString:link[KILabelLinkKey]];
         [self attemptOpenURL:url];

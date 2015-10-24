@@ -51,6 +51,9 @@ NSString * const KILabelLinkKey = @"link";
 // During a touch, range of text that is displayed as selected
 @property (nonatomic, assign) NSRange selectedRange;
 
+// for url link display short ,this is display text
+@property(nonatomic , strong) NSAttributedString *finalText;
+
 @end
 
 #pragma mark - Implementation
@@ -299,11 +302,17 @@ NSString * const KILabelLinkKey = @"link";
     if (self.isAutomaticLinkDetectionEnabled && (attributedString.length != 0))
     {
         self.linkRanges = [self getRangesForLinks:attributedString];
-        attributedString = [self addLinkAttributesToAttributedString:attributedString linkRanges:self.linkRanges];
+        
+        if (self.displayConvertLinkName && self.finalText) {
+            attributedString = self.finalText;
+        }else{
+            attributedString = [self addLinkAttributesToAttributedString:attributedString linkRanges:self.linkRanges];
+        }
     }
     else
     {
         self.linkRanges = nil;
+        self.finalText  = nil;
     }
     
     if (_textStorage)
@@ -373,6 +382,58 @@ NSString * const KILabelLinkKey = @"link";
 {
     NSMutableArray *rangesForLinks = [[NSMutableArray alloc] init];
     
+    if (self.linkDetectionTypes & KILinkTypeOptionURL)
+    {
+        if (self.displayConvertLinkName) {
+            
+            NSArray *urlRanges = [self getRangesForURLs:self.attributedText];
+            
+            if([urlRanges count] > 0){
+                NSMutableAttributedString *mtext = [[NSMutableAttributedString alloc]initWithAttributedString:text];
+                
+                NSInteger offset = 0;
+                NSValue *rangeVale;
+                NSString *replace = self.urlDisplayContent.length > 0 ? _urlDisplayContent : @"网页链接";
+                NSRange range;                                
+                NSMutableArray *convertUrls = [[NSMutableArray alloc]initWithCapacity:urlRanges.count];
+                
+                for (NSDictionary *rangeURLDict in urlRanges) {
+                    
+                    NSMutableDictionary *mdict = [rangeURLDict mutableCopy];
+                    
+                    rangeVale = rangeURLDict[KILabelRangeKey];
+                    [rangeVale getValue:&range];
+                    range.location -= offset;
+                    offset += range.length - replace.length;
+                    range.length = replace.length;
+                    
+                    mdict[KILabelRangeKey] = [NSValue valueWithRange:range];
+                    
+                    [convertUrls addObject:mdict];
+                }
+                
+                for (NSInteger i = [urlRanges count] -1 ; i >= 0; i--) {
+                    NSDictionary *dict = urlRanges[i];
+                    rangeVale = dict[KILabelRangeKey];
+                    [rangeVale getValue:&range];
+                    [mtext replaceCharactersInRange:range withString:replace];
+                }
+                
+                [rangesForLinks addObjectsFromArray:convertUrls];
+                
+                //add link to convertted content
+                text = [self addLinkAttributesToAttributedString:mtext linkRanges:convertUrls];
+                self.finalText = text;
+                
+            }else{
+                self.finalText = nil;
+            }
+            
+        }else{
+            [rangesForLinks addObjectsFromArray:[self getRangesForURLs:self.attributedText]];
+        }
+    }
+    
     if (self.linkDetectionTypes & KILinkTypeOptionUserHandle)
     {
         [rangesForLinks addObjectsFromArray:[self getRangesForUserHandles:text.string]];
@@ -381,11 +442,6 @@ NSString * const KILabelLinkKey = @"link";
     if (self.linkDetectionTypes & KILinkTypeOptionHashtag)
     {
         [rangesForLinks addObjectsFromArray:[self getRangesForHashtags:text.string]];
-    }
-    
-    if (self.linkDetectionTypes & KILinkTypeOptionURL)
-    {
-        [rangesForLinks addObjectsFromArray:[self getRangesForURLs:self.attributedText]];
     }
     
     return rangesForLinks;
